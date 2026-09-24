@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopNow — Home</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1 class="logo">ShopNow</h1>
+    <nav class="main-nav">
+      <a href="index.html">Home</a>
+      <a href="products.html">Products</a>
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+ 
+  <section class="hero">
+    <h2>Everyday tech, honest prices.</h2>
+  </section>
+
+  <input type="text" id="search-box" placeholder="Search products...">
+
+<div>
+  <label for="sort-select">Sort by:</label>
+  <select id="sort-select">
+    <option value="default">Default</option>
+    <option value="low-high">Price: Low to High</option>
+    <option value="high-low">Price: High to Low</option>
+  </select>
+</div>
+
+<div class="category-buttons">
+  <button class="category-btn" data-category="All">All</button>
+  <button class="category-btn" data-category="Computers">Computers</button>
+  <button class="category-btn" data-category="Accessories">Accessories</button>
+  <button class="category-btn" data-category="Phones">Phones</button>
+  <button class="category-btn" data-category="Tablets">Tablets</button>
+  <button class="category-btn" data-category="Monitors">Monitors</button>
+  <button class="category-btn" data-category="Headphones">Headphones</button>
+  <button class="category-btn" data-category="Smartwatches">Smartwatches</button>
+  <button class="category-btn" data-category="Cameras">Cameras</button>
+  <button class="category-btn" data-category="Gaming">Gaming</button>
+</div>
+
+  <div id="product-list" class="product-grid">
+  </div>
+
+  <footer class="site-footer"><p>&copy; 2025 ShopNow.</p></footer>
+  <script src="js/app.js"></script>
+</body>
+</html>
