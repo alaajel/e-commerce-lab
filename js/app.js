@@ -1,4 +1,9 @@
-const products = [
+const SUPABASE_URL = "https://tojdxzcxpqyeaaqoysuy.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvamR4emN4cHF5ZWFhcW95c3V5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4NTI2ODAsImV4cCI6MjEwNjQyODY4MH0.oK287ZVt1qergcbYHdVxuqn7mNVaKGiP6Kx_ANoWA6A";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+
+/*const products = [
   { id: 1, name: "Dell Laptop", category: "Computers", price: 3499, stock: 10 },
   { id: 2, name: "HP Desktop", category: "Computers", price: 2899, stock: 7 },
   { id: 3, name: "Lenovo ThinkPad", category: "Computers", price: 4299, stock: 12 },
@@ -35,7 +40,7 @@ const products = [
   { id: 26, name: "Xbox Series X", category: "Gaming", price: 1999, stock: 8 },
   { id: 27, name: "Nintendo Switch OLED", category: "Gaming", price: 1399, stock: 12 },
 ];
-
+*/
 
 function renderProducts(list) {
   const container = document.getElementById("product-list");
@@ -56,7 +61,22 @@ function renderProducts(list) {
       </div>`;
   });
 }
-renderProducts(products);
+
+async function loadProducts() {
+  const { data: products, error } = await supabase
+    .from("product")
+    .select("*, category(category_name)")
+    .order("name");
+ 
+  if (error) {
+    document.getElementById("product-list").innerHTML =
+      `<p>Could not load products: ${error.message}</p>`;
+    return;
+  }
+  renderProducts(products);
+}
+
+loadProducts()
 
 document.getElementById("search-box").addEventListener("input", e => {
   const term = e.target.value.toLowerCase();
