@@ -58,6 +58,8 @@ function renderProducts(list) {
         <p>AED ${prod.price.toLocaleString()}</p>
         <p class="stock">${stockLabel}</p>
         <button ${prod.stock === 0 ? "disabled" : ""}>Add to Cart</button>
+        <br>
+        <a href="product-detail.html?id=${prod.product_id}">View details</a>
       </div>`;
   });
 }
