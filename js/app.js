@@ -44,6 +44,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 function renderProducts(list) {
   const container = document.getElementById("product-list");
+  if (container == null) return;
   container.innerHTML = "";
   if (list.length === 0) {
     container.innerHTML = "<p>No products match your search.</p>";
@@ -57,9 +58,10 @@ function renderProducts(list) {
         <h3>${prod.name}</h3>
         <p>AED ${prod.price.toLocaleString()}</p>
         <p class="stock">${stockLabel}</p>
-        <button ${prod.stock === 0 ? "disabled" : ""}>Add to Cart</button>
+        <button ${prod.stock === 0 ? "disabled" : ""} onclick='addToCart(${JSON.stringify(prod)})'>Add to Cart</button>
         <br>
         <a href="product-detail.html?id=${prod.product_id}">View details</a>
+        
       </div>`;
   });
 }
@@ -80,9 +82,13 @@ async function loadProducts() {
 
 loadProducts()
 
-document.getElementById("search-box").addEventListener("input", e => {
+
+document.getElementById("search-box")?.addEventListener("input", e => {
   const term = e.target.value.toLowerCase();
-  renderProducts(products.filter(p => p.name.toLowerCase().includes(term)));
+
+  renderProducts(
+    products.filter(p => p.name.toLowerCase().includes(term))
+  );
 });
 
 document.querySelectorAll(".category-btn").forEach(btn => {
@@ -92,12 +98,117 @@ document.querySelectorAll(".category-btn").forEach(btn => {
   });
 });
 
-document.getElementById("sort-select").addEventListener("change", e => {
+document.getElementById("sort-select")?.addEventListener("change", e => {
   let sorted = [...products];
-  if (e.target.value === "low-high") sorted.sort((a, b) => a.price - b.price);
-  if (e.target.value === "high-low") sorted.sort((a, b) => b.price - a.price);
+
+  if (e.target.value === "low-high") {
+    sorted.sort((a, b) => a.price - b.price);
+  }
+
+  if (e.target.value === "high-low") {
+    sorted.sort((a, b) => b.price - a.price);
+  }
+
   renderProducts(sorted);
 });
 
 
+function getCart() {
+  return JSON.parse(localStorage.getItem("cart") || "[]");
+}
+ 
+function saveCart(cart) {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
+ 
+function addToCart(product) {
+  console.log("called");
+  const cart = getCart();
+  const existing = cart.find(item => item.product_id === product.product_id);
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    cart.push({ ...product, quantity: 1 });
+  }
+  saveCart(cart);
+}
+ 
+function removeFromCart(productId) {
+  saveCart(getCart().filter(item => item.product_id !== productId));
+}
+ 
+function updateQuantity(productId, quantity) {
+  if (quantity <= 0) return removeFromCart(productId);
+  const cart = getCart().map(item =>
+    item.product_id === productId ? { ...item, quantity } : item
+  );
+  saveCart(cart);
+}
 
+function renderCart() {
+  const cart = getCart();
+  const container = document.getElementById("cart-items");
+  if (container == null) return;
+  if (cart.length === 0) {
+    container.innerHTML = "<p>Your cart is empty.</p>";
+    return;
+  }
+  let subtotal = 0;
+  container.innerHTML = cart.map(item => {
+    subtotal += item.price * item.quantity;
+    return `
+      <div>
+        <span>${item.name}</span>
+        <input type="number" value="${item.quantity}"
+          onchange="updateQuantity(${item.product_id}, this.value); renderCart();">
+        <span>AED ${(item.price * item.quantity).toFixed(2)}</span>
+        <button onclick="removeFromCart(${item.product_id}); renderCart();">Remove</button>
+      </div>`;
+  }).join('');
+  document.getElementById("subtotal").textContent = subtotal.toFixed(2);
+}
+renderCart();
+
+document.getElementById("register-form")?.addEventListener("submit", async e => {
+  e.preventDefault();
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const { error } = await supabaseClient.auth.signUp({ email, password });
+  if (error) alert(error.message);
+  else { alert("Account created — you can now log in."); window.location.href = "login.html"; }
+});
+
+// login.html
+document.getElementById("login-form")?.addEventListener("submit", async e => {
+  e.preventDefault();
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) alert(error.message);
+  else window.location.href = "index.html";
+});
+
+async function updateNavForAuth() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const navSlot = document.getElementById("auth-nav-slot");
+  if (navSlot == null) return;
+  if (user) {
+    navSlot.innerHTML = `<span>Hi, ${user.email}</span> <a href="#" onclick="logout()">Log out</a>`;
+  } else {
+    navSlot.innerHTML = `<a href="login.html">Login</a>`;
+  }
+}
+ 
+async function logout() {
+  await supabaseClient.auth.signOut();
+  window.location.href = "index.html";
+}
+ 
+updateNavForAuth();
+
+async function requireLogin() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) window.location.href = "login.html";
+  return user;
+}
+// call requireLogin() at the top of cart.html's or checkout.html's script
